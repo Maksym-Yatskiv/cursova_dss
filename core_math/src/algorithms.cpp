@@ -8,7 +8,6 @@
 
 #include "algorithms.hpp"
 
-// Перевірка зв'язності графа методом обходу в ширину (BFS)
 bool check_connectivity_bfs(int n, const std::vector<Edge>& edges) {
     if (n <= 1) return true;
     if (static_cast<int>(edges.size()) < n - 1) return false;
@@ -42,8 +41,7 @@ bool check_connectivity_bfs(int n, const std::vector<Edge>& edges) {
     return visited_count == n;
 }
 
-
-// Матрична теорема Кірхгофа (підрахунок кількості остовних дерев)
+// Матрична теорема Кірхгофа
 long long count_spanning_trees_kirchhoff(int n, const std::vector<Edge>& edges) {
     if (n <= 1) return 1;
     int m = n - 1;
@@ -59,7 +57,6 @@ long long count_spanning_trees_kirchhoff(int n, const std::vector<Edge>& edges) 
         }
     }
 
-    // Обчислення визначника методом Гауса з вибором головного елемента
     double det = 1.0;
     for (int i = 0; i < m; ++i) {
         int pivot = i;
@@ -95,11 +92,9 @@ void evaluate_spanning_tree(
     std::vector<double>& local_sum_sq,
     std::vector<double>& local_log_sum
 ) {
-    // Будуємо список суміжності для конкретного дерева з (n - 1) ребер
     std::vector<std::vector<std::pair<int, double>>> adj(n);
     for (int idx : tree_edge_indices) {
         const auto& e = all_edges[idx];
-        // Якщо w_u / w_v = weight, то перехід u -> v ділить на weight, а v -> u множить
         adj[e.u].push_back({ e.v, 1.0 / e.weight });
         adj[e.v].push_back({ e.u, e.weight });
     }
@@ -108,7 +103,6 @@ void evaluate_spanning_tree(
     std::vector<bool> visited(n, false);
     std::queue<int> q;
 
-    // Беремо вершину 0 за корінь дерева з базовою вагою 1.0
     raw_weights[0] = 1.0;
     visited[0] = true;
     q.push(0);
@@ -129,7 +123,6 @@ void evaluate_spanning_tree(
         }
     }
 
-    // Нормування вектора (сума = 1.0) та акумуляція в локальні буфери потоку
     for (int i = 0; i < n; ++i) {
         double normalized_w = raw_weights[i] / total_raw_sum;
         local_sum[i] += normalized_w;
@@ -139,7 +132,6 @@ void evaluate_spanning_tree(
 }
 
 
-// Рекурсивна генерація остовних дерев (Backtracking)
 struct SearchTask {
     int next_edge_idx;
     std::vector<int> chosen_edges;
@@ -256,7 +248,6 @@ AggregationResult run_combinatorial_method(int n, const std::vector<Edge>& edges
     std::vector<double> global_log_sum(n, 0.0);
     long long total_processed = 0;
 
-    // Паралельне виконання на всіх ядрах процесора
 #pragma omp parallel if (use_multithreading)
     {
         std::vector<double> local_sum(n, 0.0);
@@ -300,7 +291,7 @@ AggregationResult run_combinatorial_method(int n, const std::vector<Edge>& edges
             double mean = global_sum[i] * inv_S;
             result.weights_arithm[i] = mean;
 
-            // Дисперсія: E[X^2] - (E[X])^2
+            // Дисперсія
             double var = (global_sum_sq[i] * inv_S) - (mean * mean);
             if (var < 0.0) var = 0.0;
             result.variances[i] = var;

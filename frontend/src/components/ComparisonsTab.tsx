@@ -127,6 +127,24 @@ const ComparisonsTab = observer(() => {
     alert("Оцінки збережено!");
   };
 
+  const VERBAL_OPTIONS = [
+    { label: "Значно гірше (0.2)", textOnly: "Значно гірше", value: 0.2 },
+    { label: "Трохи гірше (0.5)", textOnly: "Трохи гірше", value: 0.5 },
+    { label: "Однаково (1.0)", textOnly: "Однаково", value: 1.0 },
+    { label: "Трохи краще (2.0)", textOnly: "Трохи краще", value: 2.0 },
+    { label: "Значно краще (5.0)", textOnly: "Значно краще", value: 5.0 },
+  ];
+
+  const formatVerbalValue = (val: number) => {
+    const closest = VERBAL_OPTIONS.reduce((prev, curr) =>
+      Math.abs(curr.value - val) < Math.abs(prev.value - val) ? curr : prev
+    );
+    return `${closest.textOnly} (${val})`;
+  };
+
+  const selectedScaleObj = store.scales.find((s) => s.id === Number(scaleId));
+  const isVerbalScale = selectedScaleObj?.name.toLowerCase().includes("вербальна");
+
   const getAltName = (id: number) => alts.find((a) => a.id === id)?.name || id;
   const getScaleName = (id: number) => store.scales.find((s) => s.id === id)?.name || id;
   const getExpertLabel = (id: number | null) => {
@@ -267,16 +285,26 @@ const ComparisonsTab = observer(() => {
 
         <div className="field-group">
           <label>Оцінка</label>
-          <input
-            type="number"
-            step="any"
-            min={currentScale?.min_val}
-            max={currentScale?.max_val}
-            value={val}
-            onChange={(e) => setVal(e.target.value)}
-            required
-          />
-        </div>
+          {isVerbalScale ? (
+            <select
+              value={val}
+              onChange={(e) => setVal( e.target.value )}
+            >
+              {VERBAL_OPTIONS.map((opt) => (
+                <option key={opt.value} value={opt.value}>
+                  {opt.label}
+                </option>
+              ))}
+            </select>
+          ) : (
+            <input
+              type="number"
+              step="0.1"
+              value={val}
+              onChange={(e) => setVal( e.target.value )}
+            />
+            )}
+          </div>
 
         <button type="submit" className="btn-secondary">
           + Додати

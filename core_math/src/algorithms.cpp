@@ -190,7 +190,7 @@ void backtrack_trees(
 
 
 // Точка входу
-AggregationResult run_combinatorial_method(int n, const std::vector<Edge>& edges) {
+AggregationResult run_combinatorial_method(int n, const std::vector<Edge>& edges, bool use_multithreading) {
     if (n <= 0) throw std::invalid_argument("Кількість альтернатив має бути додатною.");
     for (const auto& e : edges) {
         if (e.u < 0 || e.u >= n || e.v < 0 || e.v >= n)
@@ -257,7 +257,7 @@ AggregationResult run_combinatorial_method(int n, const std::vector<Edge>& edges
     long long total_processed = 0;
 
     // Паралельне виконання на всіх ядрах процесора
-#pragma omp parallel
+#pragma omp parallel if (use_multithreading)
     {
         std::vector<double> local_sum(n, 0.0);
         std::vector<double> local_sum_sq(n, 0.0);
@@ -297,7 +297,6 @@ AggregationResult run_combinatorial_method(int n, const std::vector<Edge>& edges
         double geom_norm_sum = 0.0;
 
         for (int i = 0; i < n; ++i) {
-            // Середнє арифметичне
             double mean = global_sum[i] * inv_S;
             result.weights_arithm[i] = mean;
 
@@ -312,7 +311,6 @@ AggregationResult run_combinatorial_method(int n, const std::vector<Edge>& edges
             geom_norm_sum += result.weights_geom[i];
         }
 
-        // Повторне нормування геометричних ваг, щоб їхня сума точно дорівнювала 1.0
         for (int i = 0; i < n; ++i) {
             result.weights_geom[i] /= geom_norm_sum;
         }

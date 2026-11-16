@@ -6,6 +6,8 @@ const CalculationTab = observer(() => {
   const store = useDssStore();
   const [method, setMethod] = useState("combinatorial_geom");
 
+  const [useMultithreading, setUseMultithreading] = useState<boolean>(true);
+
   const res = store.latestResult;
   const alts = store.activeProblem?.alternatives || [];
 
@@ -22,13 +24,25 @@ const CalculationTab = observer(() => {
       <div className="panel-header">
         <h3>Розрахунок ваг альтернатив</h3>
         <div className="calc-controls">
+          <div className="settings-group" style={{ marginTop: '15px', marginBottom: '20px' }}>
+              <label style={{ display: 'flex', alignItems: 'center', gap: '10px', cursor: 'pointer' }}>
+                  <input 
+                      type="checkbox" 
+                      checked={useMultithreading} 
+                      onChange={(e) => setUseMultithreading(e.target.checked)} 
+                      style={{ width: '18px', height: '18px' }}
+                  />
+                  <strong>Увімкнути багатопоточність </strong>
+              </label>
+          </div>
           <select value={method} onChange={(e) => setMethod(e.target.value)}>
             <option value="combinatorial_geom">Середньогеометричний метод</option>
             <option value="combinatorial_arithm">Середньоарифметичний метод</option>
           </select>
+
           <button
             className="btn-success"
-            onClick={() => store.executeCalculation(method)}
+            onClick={() => store.executeCalculation(method, useMultithreading)}
             disabled={store.loading}
           >
             {store.loading ? "Розрахунок..." : "Розрахувати"}
@@ -57,11 +71,11 @@ const CalculationTab = observer(() => {
               <div className="metric-label">Загальна дисперсія</div>
               <div className="metric-value">{res.total_inconsistency.toFixed(5)}</div>
             </div>
-            {res.max_relative_error !== null && (
+            {res.avg_relative_error !== null && (
               <div className="metric-card">
-                <div className="metric-label">Відносна похибка Δ</div>
+                <div className="metric-label">Середня похибка Δ</div>
                 <div className="metric-value">
-                  {(res.max_relative_error * 100).toFixed(2)}%
+                  {res.avg_relative_error} %
                 </div>
               </div>
             )}

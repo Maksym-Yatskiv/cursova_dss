@@ -24,6 +24,6 @@ PYBIND11_MODULE(core_math, m) {
         .def_readonly("total_inconsistency", &AggregationResult::total_inconsistency);
 
     m.def("run_combinatorial_method", &run_combinatorial_method,
-        py::arg("n"), py::arg("edges"),
+        py::arg("n"), py::arg("edges"), py::arg("use_multithreading"),
         "Виконує повний цикл комбінаторного методу на всіх потоках OpenMP");
 }

@@ -14,6 +14,7 @@ router = APIRouter(prefix="/api/problems/{problem_id}")
 def run_calculation(
     problem_id: int, 
     method_name: str = "combinatorial_geom", 
+    use_multithreading: bool = True,
     db: Session = Depends(get_db)
 ):
     problem = db.query(models.Problem).filter(models.Problem.id == problem_id).first()
@@ -45,7 +46,7 @@ def run_calculation(
         cpp_edges.append(edge)
 
     start_time = time.perf_counter()
-    cpp_result = core_math.run_combinatorial_method(n, cpp_edges)
+    cpp_result = core_math.run_combinatorial_method(n, cpp_edges, use_multithreading)
     exec_time_ms = (time.perf_counter() - start_time) * 1000.0
 
     if not cpp_result.is_connected:
@@ -60,17 +61,17 @@ def run_calculation(
             break
         ref_sum += alt.reference_weight
 
-    max_relative_error = None
+    avg_relative_error = None
     if has_ref_weights:
         target_weights = cpp_result.weights_arithm if method_name == "combinatorial_arithm" else cpp_result.weights_geom
-        max_err = 0.0
+        sum_err = 0.0
         for i in range(n):
             w_ref = alternatives[i].reference_weight / ref_sum
             w_calc = target_weights[i]
             err = abs(w_calc - w_ref) / w_ref
-            if err > max_err:
-                max_err = err
-        max_relative_error = round(max_err, 6)
+            sum_err += err
+        
+        avg_relative_error = round((sum_err / n) * 100, 2)
 
     # Формуємо списки результатів для збереження у JSON
     weights_arithm_json = []
@@ -84,16 +85,18 @@ def run_calculation(
         weights_geom_json.append({"alternative_id": alt_id, "name": alt_name, "weight": round(cpp_result.weights_geom[i], 6)})
         variances_json.append({"alternative_id": alt_id, "name": alt_name, "variance": round(cpp_result.variances[i], 8)})
 
+    actual_workers = os.cpu_count() if use_multithreading else 1
+
     calc_run = models.CalculationRun(
         problem_id=problem_id,
         method_name=method_name,
         is_connected=cpp_result.is_connected,
-        workers_count=os.cpu_count() or 1,
+        workers_count=actual_workers,
         spanning_trees_count=cpp_result.spanning_trees_count,
         processed_trees_count=cpp_result.processed_trees_count,
         exec_time_ms=round(exec_time_ms, 4),
         total_inconsistency=round(cpp_result.total_inconsistency, 8),
-        max_relative_error=max_relative_error,
+        avg_relative_error=avg_relative_error,
         weights_arithm=weights_arithm_json,
         weights_geom=weights_geom_json,
         variances=variances_json

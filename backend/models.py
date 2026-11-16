@@ -81,7 +81,7 @@ class CalculationRun(Base):
     processed_trees_count = Column(BigInteger, nullable=False)
     exec_time_ms = Column(Float, nullable=False)
     total_inconsistency = Column(Float, nullable=False)
-    max_relative_error = Column(Float, nullable=True)
+    avg_relative_error = Column(Float, nullable=True)
 
     weights_arithm = Column(JSON, nullable=False)
     weights_geom = Column(JSON, nullable=False)

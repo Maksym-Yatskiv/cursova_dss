@@ -83,7 +83,7 @@ class CalculationRunResponse(BaseModel):
     processed_trees_count: int
     exec_time_ms: float
     total_inconsistency: float
-    max_relative_error: Optional[float]
+    avg_relative_error: Optional[float]
     weights_arithm: List[Dict[str, Any]]
     weights_geom: List[Dict[str, Any]]
     variances: List[Dict[str, Any]]

@@ -55,7 +55,7 @@ export interface ICalculationRun {
   processed_trees_count: number;
   exec_time_ms: number;
   total_inconsistency: number;
-  max_relative_error: number | null;
+  avg_relative_error: number | null;
   weights_arithm: { alternative_id: number; name: string; weight: number }[];
   weights_geom: { alternative_id: number; name: string; weight: number }[];
   variances: { alternative_id: number; name: string; variance: number }[];
@@ -209,13 +209,13 @@ export class DssStore {
     }
   }
 
-  async executeCalculation(methodName = "combinatorial_geom") {
+  async executeCalculation(methodName = "combinatorial_geom", useMultithreading = true) {
     if (!this.activeProblem) return;
     this.loading = true;
     this.error = null;
     try {
       const res = await this.request(
-        `/problems/${this.activeProblem.id}/calculate?method_name=${methodName}`,
+        `/problems/${this.activeProblem.id}/calculate?method_name=${methodName}&use_multithreading=${useMultithreading}`,
         { method: "POST" }
       );
       runInAction(() => {
